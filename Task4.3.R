@@ -26,6 +26,12 @@ str(wifidata)
 summary(wifidatatest)
 head(wifidatatest)
 str(wifidatatest)
+which(apply(wifidata, 2, var) == 0)
+# Removing zero variance columns
+remove_this <- c(which(apply(wifidata, 2, var) == 0), which(apply(wifidatatest, 2, var) == 0))
+wifidata0 <- wifidata[,-remove_this]
+wifidatatest0 <- wifidatatest[,-remove_this]
+
 
 #-------------------------------NA-----------------------
 length(which(is.na(wifidata)))
@@ -44,8 +50,6 @@ length(which(wifidatatest == " "))
 length(which(wifidatatest == "none"))
 head(wifidatatest)
 
-
-
 #--------------------------------preprocess------------------------------------
 wifidata <- wifidata[ , c(521:529, 1:520)]
 head(wifidata)
@@ -54,7 +58,7 @@ str(wifidata$BUILDINGID)
 wifidata$FLOOR <- factor(wifidata$FLOOR)
 str(wifidata$FLOOR)
 head(wifidata)
-wifidata[10:529][wifidata[10:529] == 100] <- -110
+wifidata[10:529][wifidata[10:529] == 100] <- -120
 
 wifidatatest <- wifidatatest[ , c(521:529, 1:520)]
 head(wifidatatest)
@@ -101,12 +105,14 @@ Control_CV <- trainControl(method = "cv", number = 3)
 #------------------------------------KNN----------------------------------------
 #-----------------KNN BUILDINGID
 #TRAIN KNN
-KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = samplewifidata, method = "knn", trControl=Control_CV, tuneLength = 10)
+KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = samplewifidata,
+                method = "knn", trControl=Control_CV, tuneLength = 5)
 KNNBID
 
 predictors(KNNBID)
 
 #make predictions
+trainPredKNNBID <- predict(KNNBID, samplewifidata)
 testPredKNNBID <- predict(KNNBID, wifidatatest)
 
 #performace measurment
@@ -114,6 +120,48 @@ postResample(testPredKNNBID, wifidatatest$BUILDINGID)
 
 #plot predicted verses actual
 plot(testPredKNNBID,wifidatatest$BUILDINGID)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifidatatestBIDpred <- wifidatatest
+wifidatatestBIDpred$BUILDINGID <- testPredKNNBID
+samplewifidataBIDpred <- samplewifidata
+samplewifidataBIDpred$BUILDINGID <- trainPredKNNBID
+
+#plots for comprobation of acuracy
+
+ggplot(wifidatatest) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifidatatestBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(samplewifidataBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+
+
+#-----------------KNN Floor
+#TRAIN KNN
+KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = samplewifidataBIDpred,
+                method = "knn", trControl=Control_CV, tuneLength = 5)
+KNNfloor
+
+predictors(KNNfloor)
+
+#make predictions
+trainPredKNNfloor <- predict(KNNfloor, samplewifidataBIDpred)
+testPredKNNfloor <- predict(KNNfloor, wifidatatestBIDpred)
+
+#performace measurment
+postResample(testPredKNNfloor, wifidatatestBIDpred$FLOOR)
+
+#plot predicted verses actual
+plot(testPredKNNfloor,wifidatatestBIDpred$FLOOR)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifidatatestfloorpred <- wifidatatestBIDpred
+wifidatatestfloorpred$floor <- testPredKNNfloor
+samplewifidatafloorpred <- samplewifidataBIDpred
+samplewifidatafloorpred$floor <- trainPredKNNfloor
+
+#plots for comprobation of acuracy
+ggplot(wifidatatestfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(samplewifidatafloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+
 
 
 #---------------------KNN Longitude
