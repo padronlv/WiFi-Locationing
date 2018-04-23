@@ -27,10 +27,6 @@ summary(wifidatatest)
 head(wifidatatest)
 str(wifidatatest)
 which(apply(wifidata, 2, var) == 0)
-# Removing zero variance columns
-remove_this <- c(which(apply(wifidata, 2, var) == 0), which(apply(wifidatatest, 2, var) == 0))
-wifidata0 <- wifidata[,-remove_this]
-wifidatatest0 <- wifidatatest[,-remove_this]
 
 
 #-------------------------------NA-----------------------
@@ -71,9 +67,33 @@ wifidatatest[10:529][wifidatatest[10:529] == 100] <- -120
 
 
 
+# Removing zero variance columns
+remove_this <- c(which(apply(wifidata, 2, var) == 0), which(apply(wifidatatest, 2, var) == 0))
+wifidata0 <- wifidata[,-remove_this]
+wifidatatest0 <- wifidatatest[,-remove_this]
+
+
+#create a vector to create an histogram which allows to see how many WAPs have signal in an observation
+onlyWAPs <- wifidata0[,c(7:318)]
+my_signals <- apply(onlyWAPs, 1, function(x) length(which(x!= -120)))
+hist(my_signals)
+
+
+#normalization by rows (use t to transform the table)
+wifitrain <- as.data.frame(t(apply(wifidata0[ ,7:318], 1, function(x) (x - min(x))/(max(x) -min(x)))))
+wifitest <- as.data.frame(t(apply(wifidatatest0[ ,7:318], 1, function(x) (x - min(x))/(max(x) -min(x)))))
+
+
+wifivector <- c(as.matrix(wifidata0[,7:318]))
+wifivector <- wifivector[-which(wifivector == -120)]
+
+ggplot() + geom_histogram(aes(x = wifivector), bins = 50) + ggtitle("") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
 ggplot(wifidata) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
 ggplot(wifidatatest) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
-#
+
 samplewifidata <- sample_frac(wifidata, 0.2, replace=FALSE)
 samplewifidata1 <- samplewifidata
 samplewifidata1$LATITUDE <- NULL
