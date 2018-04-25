@@ -70,13 +70,14 @@ ggplot(wifidata) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, 
 ggplot(wifidatatest) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
 
 #----join tables
-
 wifi <- bind_rows(wifidata, wifidatatest)
 head(wifi)
 
 #Removing zero variance columns
 remove_this <- c(which(apply(wifi, 2, var) == 0))
 remove_this1 <- c(which(apply(wifi, 1, var) == 0))
+
+
 
 
 #remove_this <- c(which(apply(wifidata, 2, var) == 0), which(apply(wifidatatest, 2, var) == 0))
@@ -93,7 +94,20 @@ WAPVstrong <- WAPvector[which(WAPvector > -20)]
 str(WAPVstrong)
 hist(WAPVstrong)
 
+#WAP IN EVERY BUILDING
+bwaps <- wifi[, c(4,10:529)]
+bwaps_count <- as.data.frame(apply(bwaps[, 2:521], 2, function(x) ifelse(x == -120, 0, 1)))
+bwaps_count1 <- bind_cols(bwaps[1], bwaps_count)
+bwaps_group <- group_by(bwaps_count1, BUILDINGID)
+bwaps_group <- summarise_all(bwaps_group, funs(sum))
+head(bwaps_group)
+
+
 #strong signal
+wifistrong <- wifi[which(apply(onlyWAPs, 1, function(x) length(which(x>-30))) != 0),]
+wifistrong <- wifistrong[,which(apply(wifistrong, 2, function(x) length(which(x>-30))) != 0)]
+head(wifistrong)
+plot(wifistrong$LATITUD, wifistrong$LONGITUDE)
 
 
 #create a vector to create an histogram which allows to see how many WAPs have signal in an observation
@@ -147,8 +161,6 @@ testwifi <- samplewifi[-Data_Partition,]
 
 #10 fold cross validation
 Control_CV <- trainControl(method = "cv", number = 3)
-
-
 
 #------------------------------------KNN----------------------------------------
 #-----------------KNN BUILDINGID
