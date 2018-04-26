@@ -66,8 +66,8 @@ head(wifidata)
 wifidatatest[10:529][wifidatatest[10:529] == 100] <- -120
 
 #----data visualization
-ggplot(wifidata) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
-ggplot(wifidatatest) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifidata) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) #+ facet_grid(BUILDINGID~FLOOR)
+ggplot(wifidatatest) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) #+ facet_grid(BUILDINGID~FLOOR)
 
 #----join tables
 wifi <- bind_rows(wifidata, wifidatatest)
@@ -75,7 +75,7 @@ head(wifi)
 
 #Removing zero variance columns
 remove_this <- c(which(apply(wifi, 2, var) == 0))
-remove_this1 <- c(which(apply(wifi, 1, var) == 0))
+remove_this1 <- c(which(apply(wifi[,10:529], 1, var) == 0))
 
 
 
@@ -137,15 +137,15 @@ wifi[ ,10:529] <- as.data.frame(apply(wifi[ ,10:529], 2, function(x) (x - min(x)
 
 #samplewifidata <- sample_frac(wifidata0, 0.2, replace=FALSE)
 samplewifi <- sample_frac(wifi, 0.3, replace=FALSE)
-samplewifidata1 <- samplewifidata
-samplewifidata1$LATITUDE <- NULL
-samplewifidata1$FLOOR <- NULL
-samplewifidata1$BUILDINGID <- NULL
-samplewifidata1$SPACEID <- NULL
-samplewifidata1$RELATIVEPOSITION <- NULL
-samplewifidata1$USERID <- NULL
-samplewifidata1$PHONEID <- NULL
-samplewifidata1$TIMESTAMP <- NULL
+#samplewifidata1 <- samplewifidata
+#samplewifidata1$LATITUDE <- NULL
+#samplewifidata1$FLOOR <- NULL
+#samplewifidata1$BUILDINGID <- NULL
+#samplewifidata1$SPACEID <- NULL
+#samplewifidata1$RELATIVEPOSITION <- NULL
+#samplewifidata1$USERID <- NULL
+#samplewifidata1$PHONEID <- NULL
+#samplewifidata1$TIMESTAMP <- NULL
 
 databuild0 = filter(wifidata, BUILDINGID == 0)
 databuild1 = filter(wifidata, BUILDINGID == 1)
@@ -165,9 +165,11 @@ Control_CV <- trainControl(method = "cv", number = 3)
 #------------------------------------KNN----------------------------------------
 #-----------------KNN BUILDINGID
 #TRAIN KNN
-KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
-                method = "knn", trControl=Control_CV, tuneLength = 5)
-KNNBID
+#KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
+#                method = "knn", trControl=Control_CV, tuneLength = 5)
+#KNNBID
+#saveRDS(KNNBID, file = "KNNBIDn.RDS")
+KNNBID <- readRDS("KNNBIDn.RDS")
 
 predictors(KNNBID)
 
@@ -190,15 +192,17 @@ wifitrainBIDpred$BUILDINGID <- trainPredKNNBID
 #plots for comprobation of acuracy
 
 ggplot(testwifi) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
-ggplot(wifitestBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitestBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
 ggplot(wifitrainBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
 
 
 #-----------------KNN Floor
 #TRAIN KNN
-KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
-                method = "knn", trControl=Control_CV, tuneLength = 5)
-KNNfloor
+#KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
+#                method = "knn", trControl=Control_CV, tuneLength = 5)
+#KNNfloor
+#saveRDS(KNNfloor, file = "KNNfloorn.RDS")
+KNNfloor <- readRDS("KNNfloorn.RDS")
 
 predictors(KNNfloor)
 
@@ -219,68 +223,201 @@ wifitrainfloorpred <- wifitrainBIDpred
 wifitrainfloorpred$floor <- trainPredKNNfloor
 
 #plots for comprobation of acuracy
-ggplot(wifidatatestfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
-ggplot(samplewifidatafloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitestfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))# + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))# + facet_grid(BUILDINGID~FLOOR)
 
 
 
 #---------------------KNN Longitude
 #train KNN
-KNNlon <- train(LONGITUDE~.-LATITUDE -FLOOR  -RELATIVEPOSITION -BUILDINGID -SPACEID -USERID -PHONEID -TIMESTAMP, data = samplewifidata, method = "knn", trControl=Control_CV, tuneLength = 10)
-KNNlon
-#KNNlon <- train(LONGITUDE~., data = samplewifidata1, method = "knn", trControl=Control_RepeatedCV, tuneLength = 10)
+#KNNlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
+#     method = "knn", trControl=Control_CV, tuneLength = 10)
 #KNNlon
 
-#predictor variables
+#saveRDS(KNNlon, file = "KNNlonn.RDS")
+KNNlon <- readRDS("KNNlonn.RDS")
+
+
 predictors(KNNlon)
 
-
 #make predictions
-testPredKNNlon <- predict(KNNlon, wifidatatest)
+trainPredKNNlon <- predict(KNNlon, wifitrainfloorpred)
+testPredKNNlon <- predict(KNNlon, wifitestfloorpred)
 
 #performace measurment
-postResample(testPredKNNlon, wifidatatest$LONGITUDE)
+postResample(testPredKNNlon, wifitestfloorpred$LONGITUDE)
 
 #plot predicted verses actual
-plot(testPredKNNlon,wifidatatest$LONGITUDE)
+plot(testPredKNNlon,wifitestfloorpred$LONGITUDE)
 
+#new tables with buildingIDs substituted by the predicted ones
+wifitestlonpred <- wifitestfloorpred
+wifitestlonpred$LONGITUDE <- testPredKNNlon
+wifitrainlonpred <- wifitrainfloorpred
+wifitrainlonpred$LONGITUDE <- trainPredKNNlon
 
+#plots for comprobation of acuracy
+ggplot(wifitestlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
 
-KNN
-#------------------------------------DT----------------------------------------
-#train DT
-RF <- train(Global_active_power~.-DateTime1h, data = training, method = "rf", importance = TRUE, trControl=Control_RepeatedCV, tuneLength =10)
-RF
-varImp(RF)
+#---------------------KNN LATITUDE
+#train KNN
+#KNNlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
+#                method = "knn", trControl=Control_CV, tuneLength = 10)
+#KNNlat
+#saveRDS(KNNlat, file = "KNNlatn.RDS")
+KNNlat <- readRDS("KNNlatn.RDS")
 
-#predictor variables
-predictors(RF)
+predictors(KNNlat)
 
 #make predictions
-testPredRF <- predict(RF, testing)
+trainPredKNNlat <- predict(KNNlat, wifitrainlonpred)
+testPredKNNlat <- predict(KNNlat, wifitestlonpred)
 
 #performace measurment
-postResample(testPredRF, testing$Global_active_power)
+postResample(testPredKNNlat, wifitestlonpred$LATITUDE)
 
 #plot predicted verses actual
-plot(testPredRF,testing$Global_active_power)
+plot(testPredKNNlat,wifitestlonpred$LATITUDE)
 
-#------------------------------------XGBM----------------------------------------
-#train DT
-XGBM <- train(Volume~ PositiveServiceReview + x4StarReviews + x1StarReviews, data = training, method = "xgbTree",
-              preprocess = c("center","scale"), trControl=Control_RepeatedCV, tuneLength = 20)
-XGBM <- train(Global_active_power~.-DateTime1h, data = training, method = "svmLinear", importance = TRUE, trControl=Control_RepeatedCV, tuneLength =10)
-XGBM
-varImp(XGBM)
+#new tables with buildingIDs substituted by the predicted ones
+wifitestlatpred <- wifitestlonpred
+wifitestlatpred$LATITUDE <- testPredKNNlat
+wifitrainlatpred <- wifitrainlonpred
+wifitrainlatpred$LATITUDE <- trainPredKNNlat
 
-#predictor variables
-predictors(XGBM)
+#plots for comprobation of acuracy
+ggplot(wifitestlatpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))  # + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainlatpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+
+#------------------------------------RF----------------------------------------
+#-----------------RF
+#TRAIN RF
+#KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
+#                method = "knn", trControl=Control_CV, tuneLength = 5)
+#KNNBID
+#saveRDS(KNNBID, file = "KNNBIDn.RDS")
+KNNBID <- readRDS("KNNBIDn.RDS")
+
+predictors(KNNBID)
 
 #make predictions
-testPredXGBM <- predict(XGBM, testing)
+trainPredKNNBID <- predict(KNNBID, trainwifi)
+testPredKNNBID <- predict(KNNBID, testwifi)
 
 #performace measurment
-postResample(testPredXGBM, testing$Global_active_power)
+postResample(testPredKNNBID, testwifi$BUILDINGID)
 
 #plot predicted verses actual
-plot(testPredXGBM,testing$Global_active_power)
+plot(testPredKNNBID, testwifi$BUILDINGID)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifitestBIDpred <- testwifi
+wifitestBIDpred$BUILDINGID <- testPredKNNBID
+wifitrainBIDpred <- trainwifi
+wifitrainBIDpred$BUILDINGID <- trainPredKNNBID
+
+#plots for comprobation of acuracy
+
+ggplot(testwifi) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitestBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) + facet_grid(BUILDINGID~FLOOR)
+
+
+#-----------------KNN Floor
+#TRAIN KNN
+#KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
+#                method = "knn", trControl=Control_CV, tuneLength = 5)
+#KNNfloor
+#saveRDS(KNNfloor, file = "KNNfloorn.RDS")
+KNNfloor <- readRDS("KNNfloorn.RDS")
+
+predictors(KNNfloor)
+
+#make predictions
+trainPredKNNfloor <- predict(KNNfloor, wifitrainBIDpred)
+testPredKNNfloor <- predict(KNNfloor, wifitestBIDpred)
+
+#performace measurment
+postResample(testPredKNNfloor, wifitestBIDpred$FLOOR)
+
+#plot predicted verses actual
+plot(testPredKNNfloor,wifitestBIDpred$FLOOR)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifitestfloorpred <- wifitestBIDpred
+wifitestfloorpred$floor <- testPredKNNfloor
+wifitrainfloorpred <- wifitrainBIDpred
+wifitrainfloorpred$floor <- trainPredKNNfloor
+
+#plots for comprobation of acuracy
+ggplot(wifitestfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))# + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))# + facet_grid(BUILDINGID~FLOOR)
+
+
+
+#---------------------KNN Longitude
+#train KNN
+#KNNlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
+#     method = "knn", trControl=Control_CV, tuneLength = 10)
+#KNNlon
+
+#saveRDS(KNNlon, file = "KNNlonn.RDS")
+KNNlon <- readRDS("KNNlonn.RDS")
+
+
+predictors(KNNlon)
+
+#make predictions
+trainPredKNNlon <- predict(KNNlon, wifitrainfloorpred)
+testPredKNNlon <- predict(KNNlon, wifitestfloorpred)
+
+#performace measurment
+postResample(testPredKNNlon, wifitestfloorpred$LONGITUDE)
+
+#plot predicted verses actual
+plot(testPredKNNlon,wifitestfloorpred$LONGITUDE)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifitestlonpred <- wifitestfloorpred
+wifitestlonpred$LONGITUDE <- testPredKNNlon
+wifitrainlonpred <- wifitrainfloorpred
+wifitrainlonpred$LONGITUDE <- trainPredKNNlon
+
+#plots for comprobation of acuracy
+ggplot(wifitestlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+
+#---------------------KNN LATITUDE
+#train KNN
+#KNNlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
+#                method = "knn", trControl=Control_CV, tuneLength = 10)
+#KNNlat
+#saveRDS(KNNlat, file = "KNNlatn.RDS")
+KNNlat <- readRDS("KNNlatn.RDS")
+
+predictors(KNNlat)
+
+#make predictions
+trainPredKNNlat <- predict(KNNlat, wifitrainlonpred)
+testPredKNNlat <- predict(KNNlat, wifitestlonpred)
+
+#performace measurment
+postResample(testPredKNNlat, wifitestlonpred$LATITUDE)
+
+#plot predicted verses actual
+plot(testPredKNNlat,wifitestlonpred$LATITUDE)
+
+#new tables with buildingIDs substituted by the predicted ones
+wifitestlatpred <- wifitestlonpred
+wifitestlatpred$LATITUDE <- testPredKNNlat
+wifitrainlatpred <- wifitrainlonpred
+wifitrainlatpred$LATITUDE <- trainPredKNNlat
+
+#plots for comprobation of acuracy
+ggplot(wifitestlatpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))  # + facet_grid(BUILDINGID~FLOOR)
+ggplot(wifitrainlatpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR )) # + facet_grid(BUILDINGID~FLOOR)
+
+
+
+
