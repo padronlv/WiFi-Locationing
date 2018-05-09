@@ -7,7 +7,6 @@ library(forecast)
 library(readr)
 library(dplyr)
 library(tidyr)
-library(lubridate)
 library(ggplot2)
 library(ggthemes)
 #set wd and seed
@@ -158,6 +157,7 @@ databuild2 = filter(wifidata, BUILDINGID == 2)
 Data_Partition <- createDataPartition(samplewifi$BUILDINGID, p = .8, list = FALSE)
 trainwifi <- samplewifi[Data_Partition,]
 testwifi <- samplewifi[-Data_Partition,]
+ggplot(testwifi) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUILDINGID, color = FLOOR ))
 
 #10 fold cross validation
 Control_CV <- trainControl(method = "cv", number = 3)
@@ -165,10 +165,10 @@ Control_CV <- trainControl(method = "cv", number = 3)
 #------------------------------------KNN----------------------------------------
 #-----------------KNN BUILDINGID
 #TRAIN KNN
-KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
-                method = "knn", trControl=Control_CV, tuneLength = 6)
-KNNBID
-saveRDS(KNNBID, file = "KNNBIDn.RDS")
+#KNNBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
+#                method = "knn", trControl=Control_CV, tuneLength = 6)
+#KNNBID
+#saveRDS(KNNBID, file = "KNNBIDn.RDS")
 KNNBID <- readRDS("KNNBIDn.RDS")
 
 predictors(KNNBID)
@@ -198,10 +198,10 @@ ggplot(wifitrainBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 
 #-----------------KNN Floor
 #TRAIN KNN
-KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
-                method = "knn", trControl=Control_CV, tuneLength = 6)
-KNNfloor
-saveRDS(KNNfloor, file = "KNNfloorn.RDS")
+#KNNfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
+#                method = "knn", trControl=Control_CV, tuneLength = 6)
+#KNNfloor
+#saveRDS(KNNfloor, file = "KNNfloorn.RDS")
 KNNfloor <- readRDS("KNNfloorn.RDS")
 
 predictors(KNNfloor)
@@ -230,11 +230,11 @@ ggplot(wifitrainfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BU
 
 #---------------------KNN Longitude
 #train KNN
-KNNlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
-     method = "knn", trControl=Control_CV, tuneLength = 6)
-KNNlon
+#KNNlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
+#     method = "knn", trControl=Control_CV, tuneLength = 6)
+#KNNlon
 
-saveRDS(KNNlon, file = "KNNlonn.RDS")
+#saveRDS(KNNlon, file = "KNNlonn.RDS")
 KNNlon <- readRDS("KNNlonn.RDS")
 
 
@@ -262,10 +262,10 @@ ggplot(wifitrainlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 
 #---------------------KNN LATITUDE
 #train KNN
-KNNlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
-                method = "knn", trControl=Control_CV, tuneLength = 6)
-KNNlat
-saveRDS(KNNlat, file = "KNNlatn.RDS")
+#KNNlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
+#                method = "knn", trControl=Control_CV, tuneLength = 6)
+#KNNlat
+#saveRDS(KNNlat, file = "KNNlatn.RDS")
 KNNlat <- readRDS("KNNlatn.RDS")
 
 predictors(KNNlat)
@@ -293,10 +293,10 @@ ggplot(wifitrainlatpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 #------------------------------------RF----------------------------------------
 #-----------------RF
 #TRAIN RF
-RFBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
-               method = "rf", trControl=Control_CV, tuneLength = 6)
-RFBID
-saveRDS(RFBID, file = "RFBIDn.RDS")
+#RFBID <- train(BUILDINGID~.-LONGITUDE -LATITUDE -FLOOR -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = trainwifi,
+#               method = "rf", trControl=Control_CV, tuneLength = 6)
+#RFBID
+#saveRDS(RFBID, file = "RFBIDn.RDS")
 RFBID <- readRDS("RFBIDn.RDS")
 
 predictors(RFBID)
@@ -326,10 +326,10 @@ ggplot(wifitrainBIDpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 
 #-----------------RF Floor
 #TRAIN RF
-RFfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
-                method = "rf", trControl=Control_CV, tuneLength = 6)
-RFfloor
-saveRDS(RFfloor, file = "RFfloorn.RDS")
+#RFfloor <- train(FLOOR~. -LONGITUDE -LATITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainBIDpred,
+#                method = "rf", trControl=Control_CV, tuneLength = 6)
+#RFfloor
+#saveRDS(RFfloor, file = "RFfloorn.RDS")
 RFfloor <- readRDS("RFfloorn.RDS")
 
 predictors(RFfloor)
@@ -340,6 +340,7 @@ testPredRFfloor <- predict(RFfloor, wifitestBIDpred)
 
 #performace measurment
 postResample(testPredRFfloor, wifitestBIDpred$FLOOR)
+confusionMatrix(testPredRFfloor, wifitestBIDpred$FLOOR)
 
 #plot predicted verses actual
 plot(testPredRFfloor,wifitestBIDpred$FLOOR)
@@ -358,11 +359,11 @@ ggplot(wifitrainfloorpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BU
 
 #---------------------RF Longitude
 #train RF
-RFlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
-     method = "rf", trControl=Control_CV, tuneLength = 6)
-RFlon
+#RFlon <- train(LONGITUDE~.-LATITUDE  -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainfloorpred, 
+#     method = "rf", trControl=Control_CV, tuneLength = 6)
+#RFlon
 
-saveRDS(RFlon, file = "RFlonn.RDS")
+#saveRDS(RFlon, file = "RFlonn.RDS")
 RFlon <- readRDS("RFlonn.RDS")
 
 
@@ -390,10 +391,10 @@ ggplot(wifitrainlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 
 #---------------------RF LATITUDE
 #train RF
-RFlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
-                method = "RF", trControl=Control_CV, tuneLength = 6)
-RFlat
-saveRDS(KNNlat, file = "RFlatn.RDS")
+#RFlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
+#                method = "rf", trControl=Control_CV, tuneLength = 6)
+#RFlat
+#saveRDS(KNNlat, file = "RFlatn.RDS")
 RFlat <- readRDS("RFlatn.RDS")
 
 predictors(RFlat)
