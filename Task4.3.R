@@ -391,8 +391,10 @@ ggplot(wifitrainlonpred) + geom_point(aes(x=LONGITUDE, y= LATITUDE, shape = BUIL
 
 #---------------------RF LATITUDE
 #train RF
+#star.time <- Sys.time()
 #RFlat <- train(LATITUDE~. -LONGITUDE -RELATIVEPOSITION -SPACEID -USERID -PHONEID -TIMESTAMP, data = wifitrainlonpred, 
-#                method = "rf", trControl=Control_CV, tuneLength = 6)
+#               method = "rf", trControl=Control_CV, tuneLength = 6)
+#end.tim
 #RFlat
 #saveRDS(KNNlat, file = "RFlatn.RDS")
 RFlat <- readRDS("RFlatn.RDS")
